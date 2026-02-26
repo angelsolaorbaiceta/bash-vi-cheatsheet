@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bash VI Mode Cheatsheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #13161e;
+    --border:    #1e2330;
+    --dim:       #2a2f40;
+    --muted:     #4a5168;
+    --text:      #c9d1e0;
+    --bright:    #e8edf5;
+    --green:     #5de4a0;
+    --cyan:      #4dd9e0;
+    --yellow:    #f0c060;
+    --orange:    #f07050;
+    --purple:    #a57df0;
+    --pink:      #e06090;
+    --accent:    #3af0a0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 40px 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 36px;
+  }
+
+  .header-left {}
+
+  .prompt {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .prompt span { color: var(--green); }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--bright);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .mode-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .mode-badge .indicator {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .grid.two-col { grid-template-columns: repeat(2, 1fr); }
+  .grid.four-col { grid-template-columns: repeat(4, 1fr); }
+
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 28px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .card.green::before  { background: linear-gradient(90deg, var(--green), transparent); }
+  .card.cyan::before   { background: linear-gradient(90deg, var(--cyan), transparent); }
+  .card.yellow::before { background: linear-gradient(90deg, var(--yellow), transparent); }
+  .card.orange::before { background: linear-gradient(90deg, var(--orange), transparent); }
+  .card.purple::before { background: linear-gradient(90deg, var(--purple), transparent); }
+  .card.pink::before   { background: linear-gradient(90deg, var(--pink), transparent); }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .card.green  .card-title { color: var(--green); }
+  .card.cyan   .card-title { color: var(--cyan); }
+  .card.yellow .card-title { color: var(--yellow); }
+  .card.orange .card-title { color: var(--orange); }
+  .card.purple .card-title { color: var(--purple); }
+  .card.pink   .card-title { color: var(--pink); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  tr + tr { border-top: 1px solid var(--border); }
+
+  td {
+    padding: 5px 0;
+    vertical-align: top;
+  }
+
+  td:first-child {
+    padding-right: 14px;
+    white-space: nowrap;
+    width: 1%;
+  }
+
+  td:last-child {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  kbd {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--bright);
+    background: var(--dim);
+    border: 1px solid var(--muted);
+    border-radius: 3px;
+    padding: 1px 6px;
+    white-space: nowrap;
+  }
+
+  kbd.mod { color: var(--yellow); border-color: var(--yellow); }
+
+  .note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 28px;
+  }
+
+  .note strong { color: var(--cyan); }
+
+  .tip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--yellow);
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+
+  .tip strong { color: var(--yellow); }
+
+  .tip code, .note code {
+    background: var(--dim);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--bright);
+    font-size: 12px;
+  }
+
+  .span-2 { grid-column: span 2; }
+  .span-3 { grid-column: span 3; }
+  .span-4 { grid-column: span 4; }
+
+  footer {
+    margin-top: 36px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  footer code {
+    color: var(--accent);
+    background: var(--surface);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="prompt"><span>$</span> set -o vi</div>
+    <h1>Bash <em>VI</em> Mode</h1>
+    <div class="subtitle">readline keybindings · command line editing · history search</div>
+  </div>
+  <div class="mode-badge">
+    <div class="indicator"></div>
+    <span>INSERT MODE by default</span>
+  </div>
+</header>
+
+<!-- MODE SWITCHING -->
+<div class="section-label">Mode Switching</div>
+<div class="grid four-col">
+  <div class="card green">
+    <div class="card-title">Enter Normal Mode</div>
+    <table>
+      <tr><td><kbd>Esc</kbd></td><td>Switch to normal (command) mode</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>c</kbd></td><td>Also enters normal mode + clears line</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>[</kbd></td><td>Alias for Esc</td></tr>
+    </table>
+  </div>
+  <div class="card green">
+    <div class="card-title">Enter Insert Mode</div>
+    <table>
+      <tr><td><kbd>i</kbd></td><td>Insert before cursor</td></tr>
+      <tr><td><kbd>I</kbd></td><td>Insert at line beginning</td></tr>
+      <tr><td><kbd>a</kbd></td><td>Append after cursor</td></tr>
+      <tr><td><kbd>A</kbd></td><td>Append at end of line</td></tr>
+    </table>
+  </div>
+  <div class="card green">
+    <div class="card-title">Replace Modes</div>
+    <table>
+      <tr><td><kbd>r</kbd></td><td>Replace single character</td></tr>
+      <tr><td><kbd>R</kbd></td><td>Enter replace mode (overwrite)</td></tr>
+      <tr><td><kbd>s</kbd></td><td>Substitute char, enter insert</td></tr>
+      <tr><td><kbd>S</kbd></td><td>Substitute whole line</td></tr>
+    </table>
+  </div>
+  <div class="card green">
+    <div class="card-title">Visual Indicator</div>
+    <table>
+      <tr><td><kbd>set</kbd></td><td><code style="color:var(--accent)">show-mode-in-prompt on</code></td></tr>
+    </table>
+    <div style="margin-top:8px; font-size:11px; color:var(--muted)">
+      Add to <code style="color:var(--bright); background:var(--dim); padding:1px 4px; border-radius:3px;">~/.inputrc</code> to show <span style="color:var(--green)">(ins)</span> / <span style="color:var(--yellow)">(cmd)</span> in prompt
+    </div>
+  </div>
+</div>
+
+<!-- MOVEMENT -->
+<div class="section-label">Movement (Normal Mode)</div>
+<div class="grid four-col">
+  <div class="card cyan">
+    <div class="card-title">Character &amp; Line</div>
+    <table>
+      <tr><td><kbd>h</kbd> <kbd>l</kbd></td><td>Left / right one char</td></tr>
+      <tr><td><kbd>0</kbd></td><td>Beginning of line</td></tr>
+      <tr><td><kbd>^</kbd></td><td>First non-blank char</td></tr>
+      <tr><td><kbd>$</kbd></td><td>End of line</td></tr>
+      <tr><td><kbd>|</kbd></td><td>Column 0</td></tr>
+    </table>
+  </div>
+  <div class="card cyan">
+    <div class="card-title">Word Motion</div>
+    <table>
+      <tr><td><kbd>w</kbd></td><td>Next word start</td></tr>
+      <tr><td><kbd>W</kbd></td><td>Next WORD start (whitespace)</td></tr>
+      <tr><td><kbd>b</kbd></td><td>Prev word start</td></tr>
+      <tr><td><kbd>B</kbd></td><td>Prev WORD start</td></tr>
+      <tr><td><kbd>e</kbd></td><td>End of word</td></tr>
+      <tr><td><kbd>E</kbd></td><td>End of WORD</td></tr>
+    </table>
+  </div>
+  <div class="card cyan">
+    <div class="card-title">Search on Line</div>
+    <table>
+      <tr><td><kbd>f</kbd><kbd class="mod">x</kbd></td><td>Find char x forward</td></tr>
+      <tr><td><kbd>F</kbd><kbd class="mod">x</kbd></td><td>Find char x backward</td></tr>
+      <tr><td><kbd>t</kbd><kbd class="mod">x</kbd></td><td>Till char x forward</td></tr>
+      <tr><td><kbd>T</kbd><kbd class="mod">x</kbd></td><td>Till char x backward</td></tr>
+      <tr><td><kbd>;</kbd></td><td>Repeat last f/F/t/T</td></tr>
+      <tr><td><kbd>,</kbd></td><td>Repeat reverse</td></tr>
+    </table>
+  </div>
+  <div class="card cyan">
+    <div class="card-title">In Insert Mode</div>
+    <table>
+      <tr><td><kbd>Ctrl</kbd><kbd>a</kbd></td><td>Beginning of line</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>e</kbd></td><td>End of line</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>f</kbd></td><td>Forward one char</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>b</kbd></td><td>Backward one char</td></tr>
+      <tr><td><kbd>Alt</kbd><kbd>f</kbd></td><td>Forward one word</td></tr>
+      <tr><td><kbd>Alt</kbd><kbd>b</kbd></td><td>Backward one word</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- EDITING -->
+<div class="section-label">Editing (Normal Mode)</div>
+<div class="grid">
+  <div class="card yellow">
+    <div class="card-title">Delete</div>
+    <table>
+      <tr><td><kbd>x</kbd></td><td>Delete char under cursor</td></tr>
+      <tr><td><kbd>X</kbd></td><td>Delete char before cursor</td></tr>
+      <tr><td><kbd>dw</kbd></td><td>Delete to next word</td></tr>
+      <tr><td><kbd>dW</kbd></td><td>Delete to next WORD</td></tr>
+      <tr><td><kbd>db</kbd></td><td>Delete to prev word start</td></tr>
+      <tr><td><kbd>de</kbd></td><td>Delete to end of word</td></tr>
+      <tr><td><kbd>d$</kbd> or <kbd>D</kbd></td><td>Delete to end of line</td></tr>
+      <tr><td><kbd>d0</kbd></td><td>Delete to start of line</td></tr>
+      <tr><td><kbd>dd</kbd></td><td>Delete entire line</td></tr>
+      <tr><td><kbd>d</kbd><kbd class="mod">n</kbd></td><td>Delete with any motion n</td></tr>
+    </table>
+  </div>
+  <div class="card yellow">
+    <div class="card-title">Change</div>
+    <table>
+      <tr><td><kbd>cw</kbd></td><td>Change to next word (enters insert)</td></tr>
+      <tr><td><kbd>cW</kbd></td><td>Change to next WORD</td></tr>
+      <tr><td><kbd>cb</kbd></td><td>Change to prev word</td></tr>
+      <tr><td><kbd>ce</kbd></td><td>Change to end of word</td></tr>
+      <tr><td><kbd>c$</kbd> or <kbd>C</kbd></td><td>Change to end of line</td></tr>
+      <tr><td><kbd>c0</kbd></td><td>Change to start of line</td></tr>
+      <tr><td><kbd>cc</kbd></td><td>Change entire line</td></tr>
+      <tr><td><kbd>~</kbd></td><td>Toggle case of char, advance</td></tr>
+    </table>
+  </div>
+  <div class="card yellow">
+    <div class="card-title">Yank &amp; Paste</div>
+    <table>
+      <tr><td><kbd>yw</kbd></td><td>Yank to next word</td></tr>
+      <tr><td><kbd>y$</kbd></td><td>Yank to end of line</td></tr>
+      <tr><td><kbd>y0</kbd></td><td>Yank to start of line</td></tr>
+      <tr><td><kbd>yy</kbd></td><td>Yank entire line</td></tr>
+      <tr><td><kbd>p</kbd></td><td>Paste after cursor</td></tr>
+      <tr><td><kbd>P</kbd></td><td>Paste before cursor</td></tr>
+    </table>
+    <div style="margin-top:10px; font-size:11px; color:var(--muted)">
+      ⚠ Bash uses a single unnamed register — no named registers like Vim.
+    </div>
+  </div>
+</div>
+
+<!-- UNDO / REDO -->
+<div class="section-label">Undo &amp; Redo</div>
+<div class="grid four-col">
+  <div class="card orange">
+    <div class="card-title">Undo</div>
+    <table>
+      <tr><td><kbd>u</kbd></td><td>Undo last change</td></tr>
+      <tr><td><kbd>U</kbd></td><td>Undo all changes to line</td></tr>
+    </table>
+  </div>
+  <div class="card orange">
+    <div class="card-title">Redo</div>
+    <table>
+      <tr><td><kbd>Ctrl</kbd><kbd>r</kbd></td><td>Redo (in normal mode)</td></tr>
+    </table>
+    <div style="margin-top:8px; font-size:11px; color:var(--muted)">Note: Ctrl-r is also incremental history search in insert mode — context matters!</div>
+  </div>
+  <div class="card orange span-2">
+    <div class="card-title">Counts / Repetition</div>
+    <table>
+      <tr><td><kbd class="mod">n</kbd><kbd>w</kbd></td><td>Repeat motion n times (e.g. <kbd>3w</kbd> = forward 3 words)</td></tr>
+      <tr><td><kbd class="mod">n</kbd><kbd>d</kbd><kbd>w</kbd></td><td>Repeat operation n times (e.g. <kbd>2dw</kbd> = delete 2 words)</td></tr>
+      <tr><td><kbd>.</kbd></td><td>Repeat last text-modification command (limited support in bash readline)</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="section-label">History Navigation</div>
+<div class="grid">
+  <div class="card purple">
+    <div class="card-title">Normal Mode History</div>
+    <table>
+      <tr><td><kbd>k</kbd></td><td>Previous command (older)</td></tr>
+      <tr><td><kbd>j</kbd></td><td>Next command (newer)</td></tr>
+      <tr><td><kbd>-</kbd></td><td>Move to first non-blank of prev line</td></tr>
+      <tr><td><kbd>G</kbd></td><td>Jump to oldest history entry</td></tr>
+      <tr><td><kbd>gg</kbd></td><td>Jump to newest (current) entry</td></tr>
+    </table>
+  </div>
+  <div class="card purple">
+    <div class="card-title">Search History</div>
+    <table>
+      <tr><td><kbd>/</kbd><kbd class="mod">pat</kbd></td><td>Search backward in history</td></tr>
+      <tr><td><kbd>?</kbd><kbd class="mod">pat</kbd></td><td>Search forward in history</td></tr>
+      <tr><td><kbd>n</kbd></td><td>Next match (same direction)</td></tr>
+      <tr><td><kbd>N</kbd></td><td>Next match (opposite direction)</td></tr>
+    </table>
+    <div style="margin-top:8px; font-size:11px; color:var(--muted)">
+      Pattern is a basic regex. Press Enter to execute, or Esc to cancel.
+    </div>
+  </div>
+  <div class="card purple">
+    <div class="card-title">Insert Mode History</div>
+    <table>
+      <tr><td><kbd>Ctrl</kbd><kbd>r</kbd></td><td>Incremental reverse search</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>s</kbd></td><td>Forward incremental search*</td></tr>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Browse history (works in insert too)</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>p</kbd></td><td>Previous history entry</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>n</kbd></td><td>Next history entry</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- COMPLETION & MISC -->
+<div class="section-label">Completion &amp; Misc</div>
+<div class="grid four-col">
+  <div class="card pink">
+    <div class="card-title">Completion</div>
+    <table>
+      <tr><td><kbd>Tab</kbd></td><td>Autocomplete (insert mode)</td></tr>
+      <tr><td><kbd>*</kbd></td><td>Expand glob pattern (normal mode)</td></tr>
+      <tr><td><kbd>=</kbd></td><td>List possible completions (normal)</td></tr>
+      <tr><td><kbd>\</kbd></td><td>Complete without cycling (normal)</td></tr>
+    </table>
+  </div>
+  <div class="card pink">
+    <div class="card-title">Shell Interaction</div>
+    <table>
+      <tr><td><kbd>v</kbd></td><td>Open command in $EDITOR</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>l</kbd></td><td>Clear screen</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>z</kbd></td><td>Suspend to background</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>c</kbd></td><td>Cancel / SIGINT</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>d</kbd></td><td>EOF / logout</td></tr>
+    </table>
+  </div>
+  <div class="card pink">
+    <div class="card-title">Delete (Insert Mode)</div>
+    <table>
+      <tr><td><kbd>Ctrl</kbd><kbd>h</kbd></td><td>Delete char backward</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>w</kbd></td><td>Delete word backward</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>u</kbd></td><td>Delete to start of line</td></tr>
+      <tr><td><kbd>Ctrl</kbd><kbd>k</kbd></td><td>Delete to end of line</td></tr>
+      <tr><td><kbd>Alt</kbd><kbd>d</kbd></td><td>Delete word forward</td></tr>
+    </table>
+  </div>
+  <div class="card pink">
+    <div class="card-title">Transpose &amp; Case</div>
+    <table>
+      <tr><td><kbd>Ctrl</kbd><kbd>t</kbd></td><td>Transpose chars (insert)</td></tr>
+      <tr><td><kbd>Alt</kbd><kbd>t</kbd></td><td>Transpose words (insert)</td></tr>
+      <tr><td><kbd>Alt</kbd><kbd>u</kbd></td><td>Uppercase word (insert)</td></tr>
+      <tr><td><kbd>Alt</kbd><kbd>l</kbd></td><td>Lowercase word (insert)</td></tr>
+      <tr><td><kbd>Alt</kbd><kbd>c</kbd></td><td>Capitalize word (insert)</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div class="section-label">Setup &amp; Configuration</div>
+<div class="grid two-col">
+  <div class="card green span-2" style="padding:16px 20px;">
+    <div class="card-title">~/.inputrc — recommended config</div>
+    <pre style="color:var(--text); font-size:12px; line-height:1.8; tab-size:4;">
+<span style="color:var(--muted)"># Enable vi mode globally (for all readline apps: bash, psql, gdb…)</span>
+set editing-mode vi
+
+<span style="color:var(--muted)"># Show current mode in the prompt: (cmd) / (ins)</span>
+set show-mode-in-prompt on
+set vi-ins-mode-string <span style="color:var(--green)">"\1\e[6 q\2"</span>   <span style="color:var(--muted)"># beam cursor in insert</span>
+set vi-cmd-mode-string <span style="color:var(--green)">"\1\e[2 q\2"</span>   <span style="color:var(--muted)"># block cursor in normal</span>
+
+<span style="color:var(--muted)"># Keep Ctrl-R in insert mode (incremental search)</span>
+$if mode=vi
+  set keymap vi-insert
+  Control-r: reverse-search-history
+  Control-s: forward-search-history
+  Control-l: clear-screen
+$endif</pre>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Note:</strong> The <code>v</code> command in normal mode opens the current command in <code>$EDITOR</code> (falls back to <code>vi</code>). For complex multi-line commands this is indispensable — edit freely, then <code>:wq</code> to execute. Also works in <strong>zsh</strong> vi mode with <code>edit-command-line</code>.
+</div>
+
+<div class="tip">
+  <strong>Tip:</strong> Ctrl-r in insert mode is the fastest way to search history — it's muscle memory worth keeping. The <code>/pattern</code> search in normal mode is regex-based and great for finding long past commands. Combine with <code>n</code>/<code>N</code> to navigate matches. Also consider <code>bind -x '"\C-x\C-e": edit_and_execute_command'</code> in <code>.bashrc</code> as an alternative to <code>v</code>.
+</div>
+
+<footer>
+  <span>set -o vi · bash readline vi mode · readline(3)</span>
+  <span><code>bind -P | grep -i vi</code> to list all active vi bindings</span>
+</footer>
+
+</body>
+</html>
